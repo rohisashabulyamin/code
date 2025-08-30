@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator QR Code & Excel - Rohis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab {
+            padding: 15px 20px;
+            flex: 1;
+            text-align: center;
+            background: #4a69bd;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .tab.active {
+            background: #1e3c72;
+            font-weight: bold;
+        }
+        
+        .tab:hover {
+            background: #3c5aa6;
+        }
+        
+        .content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #2a5298 0%, #3a66c8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .qr-preview {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        
+        .qr-code {
+            margin: 20px auto;
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-code img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .member-list {
+            margin-top: 20px;
+        }
+        
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        
+        .member-item:last-child {
+            border-bottom: none;
+        }
+        
+        .remove-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .remove-btn:hover {
+            background: #c0392b;
+        }
+        
+        .success-message {
+            background: #2ecc71;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 768px) {
+            .tab-container {
+                flex-direction: row; /* Ubah dari column ke row */
+                flex-wrap: wrap;
+         }
+            .tab {
+             flex: 1 1 100px;
+                min-width: 100px;
+                font-size: 1rem;
+                padding: 12px 8px;
+         }
+            .content {
+                padding: 20px;
+    }
+        }
+                /* Sidebar Toggle Button */
+        #sidebar-toggle {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            z-index: 1001;
+            background: #1e3c72;
+            color: #fff;
+            padding: 14px 16px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-size: 1.6rem;
+            box-shadow: 2px 2px 12px rgba(30,60,114,0.15);
+            transition: background 0.3s;
+        }
+        #sidebar-toggle:hover {
+            background: #2a5298;
+        }
+        
+        /* Sidebar Panel */
+        #sidebar-panel {
+            position: fixed;
+            top: 0;
+            left: -220px;
+            width: 220px;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            z-index: 1002;
+            box-shadow: 2px 0 16px rgba(30,60,114,0.12);
+            padding: 32px 18px 18px 18px;
+            transition: left 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        #sidebar-panel.open {
+            left: 0;
+        }
+        #sidebar-panel h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+        .sidebar-link {
+            display: block;
+            color: #fff;
+            background: rgba(255,255,255,0.08);
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+        .sidebar-link:hover {
+            background: rgba(255,255,255,0.22);
+        }
+        #sidebar-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            #sidebar-panel {
+                width: 80vw;
+                min-width: 160px;
+                padding: 24px 10px 10px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ROHIS ASHAB</h1>
+            <p class="description">Alat untuk membuat QR Code dan file Excel untuk keanggotaan Rohis</p>
+        </header>
+        
+        <div class="tab-container">
+            <div class="tab active" data-tab="qr">QR Code Generator</div>
+            <div class="tab" data-tab="excel1">Generator Acara</div>
+            <div class="tab" data-tab="excel2">Generator Keanggotaan</div>
+        </div>
+        
+        <!-- QR Code Generator -->
+        <div class="content active" id="qr-content">
+            <h2>Generator QR Code</h2>
+            <div class="form-group">
+                <label for="qr-url">Masukkan URL atau Teks:</label>
+                <input type="text" id="qr-url" placeholder="https://example.com atau teks apapun">
+            </div>
+            
+            <div class="form-group">
+                <label for="qr-filename">Nama File untuk Download:</label>
+                <input type="text" id="qr-filename" placeholder="Nama file tanpa ekstensi">
+            </div>
+            
+            <button id="generate-qr">Generate QR Code</button>
+            
+            <div class="qr-preview">
+                <h3>Preview QR Code</h3>
+                <div class="qr-code">
+                    <p>QR Code akan muncul di sini</p>
+                </div>
+                <button id="download-qr" disabled>Download QR Code</button>
+            </div>
+        </div>
+        
+        <!-- Excel Generator Format 1 -->
+        <div class="content" id="excel1-content">
+            <h2>Generator Excel - Format 1</h2>
+            <div class="form-group">
+                <label for="excel1-filename">Nama File Excel:</label>
+                <input type="text" id="excel1-filename" placeholder="Nama file tanpa ekstensi">
+            </div>
+            
+            <div class="form-group">
+                <label for="member-name">Nama Anggota:</label>
+                <input type="text" id="member-name" placeholder="Nama lengkap">
+            </div>
+            
+            <div class="form-group">
+                <label for="member-position">Jabatan:</label>
+                <select id="member-position">
+                    <option value="">Pilih Jabatan</option>
+                    <option value="Ketua">Ketua</option>
+                    <option value="Bendahara">Bendahara</option>
+                    <option value="SDM">SDM</option>
+                    <option value="Sekretaris">Sekretaris</option>
+                    <option value="Wakil Ketua">Wakil Ketua</option>
+                    <option value="Lapangan">Lapangan</option>
+                    <option value="Konsumsi">Konsumsi</option>
+                    <option value="Dokumentasi">Dokumentasi</option>
+                    <option value="MC">MC</option>
+                    <option value="Peralatan">Peralatan</option>
+                </select>
+            </div>
+            
+            <button id="add-member1">Tambah Anggota</button>
+            
+            <div class="member-list" id="member-list1">
+                <h3>Daftar Anggota</h3>
+                <p>Belum ada anggota yang ditambahkan</p>
+            </div>
+            
+            <button id="generate-excel1" disabled>Generate File Excel</button>
+            
+            <div class="success-message" id="success1">
+                File Excel berhasil dihasilkan!
+            </div>
+        </div>
+        
+        <!-- Excel Generator Format 2 -->
+        <div class="content" id="excel2-content">
+            <h2>Generator Excel - Format 2</h2>
+            <div class="form-group">
+                <label for="excel2-year">Tahun:</label>
+                <input type="number" id="excel2-year" placeholder="Tahun" min="2000" max="2100" value="2023">
+            </div>
+            
+            <div class="form-group">
+                <label for="member-name2">Nama Anggota:</label>
+                <input type="text" id="member-name2" placeholder="Nama lengkap">
+            </div>
+            
+            <div class="form-group">
+                <label for="member-position2">Jabatan:</label>
+                <select id="member-position2">
+                    <option value="">Pilih Jabatan</option>
+                    <option value="Ketua">Ketua</option>
+                    <option value="Wakil Ketua">Wakil Ketua</option>
+                    <option value="Keihkwanan">Keihkwanan</option>
+                    <option value="Keakhwatan">Keakhwatan</option>
+                    <option value="SDM">SDM</option>
+                    <option value="Humas">Humas</option>
+                    <option value="Kominfo">Kominfo</option>
+                    <option value="Bendahara">Bendahara</option>
+                    <option value="Sekertaris">Sekertaris</option>
+                    <option value="Sapras">Sapras</option>
+                    <option value="PHBI">PHBI</option>
+                    <option value="Dakwah">Dakwah</option>
+                </select>
+            </div>
+            
+            <button id="add-member2">Tambah Anggota</button>
+            
+            <div class="member-list" id="member-list2">
+                <h3>Daftar Anggota</h3>
+                <p>Belum ada anggota yang ditambahkan</p>
+            </div>
+            
+            <button id="generate-excel2" disabled>Generate File Excel</button>
+            
+            <div class="success-message" id="success2">
+                File Excel berhasil dihasilkan!
+            </div>
+        </div>
+        
+        <footer>
+            <p>Generator QR Code & Excel untuk Rohis &copy; 2023</p>
+        </footer>
+    </div>
+        <!-- ...existing code... -->
+        <!-- Sidebar Toggle Button & Panel -->
+        <div id="sidebar-toggle">&#9776;</div>
+        <div id="sidebar-panel">
+            <button id="sidebar-close">&times;</button>
+            <h3>Social Media</h3>
+            <a href="https://whatsapp.com/channel/0029VaeJ5e88F2p5z46seK35" target="_blank" class="sidebar-link">WhatsApp</a>
+            <a href="https://www.instagram.com/rohis_ashabulyamin?igsh=aXl3N3h3cThnazE3" target="_blank" class="sidebar-link">Instagram</a>
+            <a href="rohisashabulyamin@gmail.com" target="_blank" class="sidebar-link">Email</a>
+            <!-- Tambahkan link lain di sini -->
+        </div>
+    <!-- ...existing code... -->
+    <script>
+        // Tab navigation
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
+            });
+        });
+        
+        // QR Code Generator
+        const qrUrlInput = document.getElementById('qr-url');
+        const qrFilenameInput = document.getElementById('qr-filename');
+        const generateQrBtn = document.getElementById('generate-qr');
+        const downloadQrBtn = document.getElementById('download-qr');
+        const qrCodeDiv = document.querySelector('.qr-code');
+        
+        generateQrBtn.addEventListener('click', () => {
+            const url = qrUrlInput.value.trim();
+            if (!url) {
+                alert('Masukkan URL atau teks terlebih dahulu!');
+                return;
+            }
+            
+            // Create QR code with gradient colors using the API
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&color=1E3C72-000000&bgcolor=FFFFFF&gradient=1`;
+            
+            // Display the QR code
+            qrCodeDiv.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code">`;
+            downloadQrBtn.disabled = false;
+        });
+        
+        downloadQrBtn.addEventListener('click', () => {
+            const filename = qrFilenameInput.value.trim() || 'qrcode';
+            const qrImg = qrCodeDiv.querySelector('img');
+            
+            if (!qrImg) {
+                alert('Generate QR Code terlebih dahulu!');
+                return;
+            }
+            
+            // Create a temporary link for download
+            const link = document.createElement('a');
+            link.href = qrImg.src;
+            link.download = `${filename}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        
+        // Excel Generator Format 1
+        const memberList1 = [];
+        const memberListContainer1 = document.getElementById('member-list1');
+        const addMemberBtn1 = document.getElementById('add-member1');
+        const generateExcelBtn1 = document.getElementById('generate-excel1');
+        
+        addMemberBtn1.addEventListener('click', () => {
+            const name = document.getElementById('member-name').value.trim();
+            const position = document.getElementById('member-position').value;
+            
+            if (!name || !position) {
+                alert('Masukkan nama dan pilih jabatan!');
+                return;
+            }
+            
+            // Add member to the list
+            memberList1.push({ name, position });
+            
+            // Update the display
+            updateMemberListDisplay(memberList1, memberListContainer1, 1);
+            
+            // Enable generate button if there are members
+            generateExcelBtn1.disabled = memberList1.length === 0;
+            
+            // Clear input fields
+            document.getElementById('member-name').value = '';
+            document.getElementById('member-position').value = '';
+        });
+        
+        // Excel Generator Format 2
+        const memberList2 = [];
+        const memberListContainer2 = document.getElementById('member-list2');
+        const addMemberBtn2 = document.getElementById('add-member2');
+        const generateExcelBtn2 = document.getElementById('generate-excel2');
+        
+        addMemberBtn2.addEventListener('click', () => {
+            const name = document.getElementById('member-name2').value.trim();
+            const position = document.getElementById('member-position2').value;
+            
+            if (!name || !position) {
+                alert('Masukkan nama dan pilih jabatan!');
+                return;
+            }
+            
+            // Add member to the list
+            memberList2.push({ name, position });
+            
+            // Update the display
+            updateMemberListDisplay(memberList2, memberListContainer2, 2);
+            
+            // Enable generate button if there are members
+            generateExcelBtn2.disabled = memberList2.length === 0;
+            
+            // Clear input fields
+            document.getElementById('member-name2').value = '';
+            document.getElementById('member-position2').value = '';
+        });
+        
+        // Function to update member list display
+        function updateMemberListDisplay(memberList, container, listNumber) {
+            if (memberList.length === 0) {
+                container.innerHTML = '<h3>Daftar Anggota</h3><p>Belum ada anggota yang ditambahkan</p>';
+                return;
+            }
+            
+            let html = '<h3>Daftar Anggota</h3>';
+            memberList.forEach((member, index) => {
+                html += `
+                    <div class="member-item">
+                        <div>
+                            <strong>${member.name}</strong> - ${member.position}
+                        </div>
+                        <button class="remove-btn" data-index="${index}" data-list="${listNumber}">Hapus</button>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // Add event listeners to remove buttons
+            container.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const listNum = parseInt(e.target.dataset.list);
+                    
+                    if (listNum === 1) {
+                        memberList1.splice(index, 1);
+                        updateMemberListDisplay(memberList1, memberListContainer1, 1);
+                        generateExcelBtn1.disabled = memberList1.length === 0;
+                    } else {
+                        memberList2.splice(index, 1);
+                        updateMemberListDisplay(memberList2, memberListContainer2, 2);
+                        generateExcelBtn2.disabled = memberList2.length === 0;
+                    }
+                });
+            });
+        }
+        
+        // Generate Excel for Format 1
+        generateExcelBtn1.addEventListener('click', () => {
+            const filename = document.getElementById('excel1-filename').value.trim() || 'anggota_rohis';
+            
+            // Prepare data for Excel
+            const data = [['Nama', 'Jabatan']];
+            memberList1.forEach(member => {
+                data.push([member.name, member.position]);
+            });
+            
+            // Create worksheet and workbook
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Anggota');
+            
+            // Generate Excel file
+            XLSX.writeFile(wb, `${filename}.xlsx`);
+            
+            // Show success message
+            const successMsg = document.getElementById('success1');
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+        });
+        
+        // Generate Excel for Format 2
+        generateExcelBtn2.addEventListener('click', () => {
+            const year = document.getElementById('excel2-year').value;
+            const filename = `List_anggota_Rohis_Tahun_${year}`;
+            
+            // Prepare data for Excel
+            const data = [['Nama', 'Jabatan']];
+            memberList2.forEach(member => {
+                data.push([member.name, member.position]);
+            });
+            
+            // Create worksheet and workbook
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Anggota');
+            
+            // Generate Excel file
+            XLSX.writeFile(wb, `${filename}.xlsx`);
+            
+            // Show success message
+            const successMsg = document.getElementById('success2');
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+        });
+                // ...existing code...
+            // Sidebar toggle logic
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarPanel = document.getElementById('sidebar-panel');
+            const sidebarClose = document.getElementById('sidebar-close');
+        
+            sidebarToggle.addEventListener('click', () => {
+                sidebarPanel.classList.add('open');
+            });
+            sidebarClose.addEventListener('click', () => {
+                sidebarPanel.classList.remove('open');
+            });
+            // Optional: close sidebar when clicking outside
+            document.addEventListener('click', (e) => {
+                if (
+                    sidebarPanel.classList.contains('open') &&
+                    !sidebarPanel.contains(e.target) &&
+                    e.target !== sidebarToggle
+                ) {
+                    sidebarPanel.classList.remove('open');
+                }
+            });
+        // ...existing code...
+    </script>
+</body>
+</html>
